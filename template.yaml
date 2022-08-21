@@ -67,18 +67,18 @@ Resources:
         - Key: Name
           Value: !Sub ${EnvironmentName} Private Routes (AZ1)
 
+  PrivateSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref PrivateSubnet
+
   NoIngressSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupName: "no-ingress-sg"
       GroupDescription: "Security group with no ingress rule"
       VpcId: !Ref VPC
-
-  PrivateSubnetRouteTableAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      RouteTableId: !Ref PrivateRouteTable
-      SubnetId: !Ref PrivateSubnet
 
   # The Lambda function that copies between buckets and writes the metadata to our DB
   AWSS3FileUpload:
