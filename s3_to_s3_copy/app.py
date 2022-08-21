@@ -1,6 +1,7 @@
 from typing import List
 from dataclasses import dataclass
 from datetime import datetime
+from decimal import Decimal
 import boto3
 
 WORD_CHECK = ["captain tsubasa", "star wars"]
@@ -11,9 +12,13 @@ TABLE_NAME = "FileMetadataInfo"
 @dataclass
 class S3File:
     name: str
-    timestamp: float
-    size_mb: float
+    timestamp: int
+    size_mb: Decimal
     str_found: bool
+
+
+def conv_byte_to_mb(size: int) -> Decimal:
+    return round(Decimal(size * (1 / 100000)), 6)
 
 
 # set clients for aws resources
@@ -39,7 +44,7 @@ def lambda_handler(event, context):
         bucket = s3_client.Bucket(TARGET_BUCKET_NAME)
 
         obj_name = s3_obj["key"]
-        size = s3_obj["size"]
+        size = conv_byte_to_mb(s3_obj["size"])
 
         print(obj_name)
 
@@ -49,7 +54,8 @@ def lambda_handler(event, context):
 
         file = S3File(
             name=obj_name,
-            timestamp=datetime.now().timestamp(),
+            # dynamodb does not support float
+            timestamp=int(datetime.now().timestamp()),
             size_mb=size,
             str_found=contains_str(list_of_words=WORD_CHECK, obj_name=obj_name),
         )
