@@ -85,7 +85,7 @@ Resources:
           Statement:
             - Effect: Allow
               Action:
-                - 's3:GetObject'
+                - 's3:Get*'
               Resource: 'arn:aws:s3:::source-bucket-dyslexicat/*'
             - Effect: Allow
               Action:
@@ -94,7 +94,7 @@ Resources:
             - Effect: Allow
               Action:
                 - 's3:PutObject'
-                - 's3:GetObject'
+                - 's3:Get*'
               Resource: 'arn:aws:s3:::target-bucket-dyslexicat/*'
             - Effect: Allow
               Action:
