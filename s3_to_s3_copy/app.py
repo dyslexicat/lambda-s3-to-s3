@@ -2,6 +2,7 @@ from typing import List
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
+from urllib.parse import unquote_plus
 import uuid
 import boto3
 
@@ -40,14 +41,15 @@ def lambda_handler(event, context):
     try:
         s3_event = event["Records"][0]["s3"]
         s3_obj = s3_event["object"]
+        obj_name = unquote_plus(s3_obj["key"])
 
-        copy_source = {"Bucket": s3_event["bucket"]["name"], "Key": s3_obj["key"]}
+        copy_source = {"Bucket": s3_event["bucket"]["name"], "Key": obj_name}
 
         bucket = s3_client.Bucket(TARGET_BUCKET_NAME)
 
-        obj_name = s3_obj["key"]
         size = conv_byte_to_mb(s3_obj["size"])
 
+        print(s3_obj)
         print(obj_name)
 
         bucket.copy(copy_source, obj_name)
