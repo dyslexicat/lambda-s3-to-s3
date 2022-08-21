@@ -2,6 +2,7 @@ from typing import List
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
+import uuid
 import boto3
 
 WORD_CHECK = ["captain tsubasa", "star wars"]
@@ -11,6 +12,7 @@ TABLE_NAME = "FileMetadataInfo"
 
 @dataclass
 class S3File:
+    id: str
     name: str
     timestamp: int
     size_mb: Decimal
@@ -53,6 +55,7 @@ def lambda_handler(event, context):
         table = dynamodb_client.Table(TABLE_NAME)
 
         file = S3File(
+            id=str(uuid.uuid4()),
             name=obj_name,
             # dynamodb does not support float
             timestamp=int(datetime.now().timestamp()),
@@ -63,6 +66,7 @@ def lambda_handler(event, context):
         print(file)
         table.put_item(
             Item={
+                "id": file.id,
                 "name": file.name,
                 "timestamp": file.timestamp,
                 "size_mb": file.size_mb,
