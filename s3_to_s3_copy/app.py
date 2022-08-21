@@ -4,6 +4,7 @@ from datetime import datetime
 import boto3
 
 WORD_CHECK = ["captain tsubasa", "star wars"]
+TARGET_BUCKET_NAME = "target-bucket-dyslexicat-test"
 
 
 @dataclass
@@ -34,7 +35,7 @@ def lambda_handler(event, context):
 
         copy_source = {"Bucket": s3_event["bucket"]["name"], "Key": s3_obj["key"]}
 
-        bucket = s3_client.Bucket("target-bucket-dyslexicat")
+        bucket = s3_client.Bucket(TARGET_BUCKET_NAME)
 
         obj_name = s3_obj["key"]
         size = s3_obj["size"]
