@@ -10,7 +10,64 @@ Globals:
   Function:
     Timeout: 3
 
+Parameters:
+  EnvironmentName:
+    Description: An environment name that will be used as a suffix for resources
+    Type: String
+    Default: test
+  VpcCIDR:
+    Description: The IP range (CIDR notation) for this VPC
+    Type: String
+    Default: 13.37.0.0/16
+  PrivateSubnetCIDR:
+    Description: The IP range (CIDR notation) for the private subnet
+    Type: String
+    Default: 13.37.13.0/24
+
 Resources:
+  # The VPC for our Lambda function
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCIDR
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-${EnvironmentName}-VPC'
+
+  PrivateSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 0, !GetAZs  '' ]
+      CidrBlock: !Ref PrivateSubnetCIDR
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Private Subnet (AZ1)
+
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Private Routes (AZ1)
+
+  NoIngressSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: "no-ingress-sg"
+      GroupDescription: "Security group with no ingress rule"
+      VpcId: !Ref VPC
+
+  PrivateSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref PrivateSubnet
+
   # The Lambda function that copies between buckets and writes the metadata to our DB
   AWSS3FileUpload:
     Type: AWS::Serverless::Function
@@ -18,6 +75,11 @@ Resources:
       CodeUri: s3_to_s3_copy/
       Handler: app.lambda_handler
       Runtime: python3.9
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref NoIngressSecurityGroup
+        SubnetIds:
+          - !Ref PrivateSubnet
       Policies:
         - Version: '2012-10-17'
           Statement:
