@@ -5,6 +5,7 @@ import boto3
 
 WORD_CHECK = ["captain tsubasa", "star wars"]
 TARGET_BUCKET_NAME = "target-bucket-dyslexicat-test"
+TABLE_NAME = "FileMetadataInfo"
 
 
 @dataclass
@@ -39,9 +40,12 @@ def lambda_handler(event, context):
 
         obj_name = s3_obj["key"]
         size = s3_obj["size"]
+
         print(obj_name)
 
         bucket.copy(copy_source, obj_name)
+
+        table = dynamodb_client.Table(TABLE_NAME)
 
         file = S3File(
             name=obj_name,
@@ -51,6 +55,15 @@ def lambda_handler(event, context):
         )
 
         print(file)
+        table.put_item(
+            Item={
+                "name": file.name,
+                "timestamp": file.timestamp,
+                "size_mb": file.size_mb,
+                "found": file.str_found,
+            }
+        )
+
     except Exception as err:
         print(err)
         raise err
