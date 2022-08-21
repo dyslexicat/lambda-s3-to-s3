@@ -5,10 +5,13 @@ from decimal import Decimal
 from urllib.parse import unquote_plus
 import uuid
 import boto3
+import os
 
 WORD_CHECK = ["captain tsubasa", "star wars"]
-TARGET_BUCKET_NAME = "target-bucket-dyslexicat-test"
-TABLE_NAME = "FileMetadataInfo"
+TARGET_BUCKET_NAME = os.getenv("TARGET_BUCKET_NAME")
+TABLE_NAME = os.getenv("TABLE_NAME")
+
+# add logging / rename variables / use environment variables for TARGET_BUCKET_NAME and TABLE_NAME
 
 
 @dataclass

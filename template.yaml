@@ -129,7 +129,10 @@ Resources:
                 - dynamodb:Update*
                 - dynamodb:PutItem
               Resource: !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTableName}"
-
+      Environment:
+        Variables:
+          TARGET_BUCKET_NAME: !Sub '${TargetBucketName}-${EnvironmentName}'
+          TABLE_NAME: !Ref DynamoDBTableName
       Architectures:
         - x86_64
       Events:
