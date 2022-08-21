@@ -15,6 +15,15 @@ Parameters:
     Description: An environment name that will be used as a suffix for resources
     Type: String
     Default: test
+  SourceBucketName:
+    Description: The name of the source Bucket
+    Type: String
+    Default: 'source-bucket-dyslexicat'
+  TargetBucketName:
+    Description: The name of the target Bucket
+    Type: String
+    Default: 'target-bucket-dyslexicat'
+
   VpcCIDR:
     Description: The IP range (CIDR notation) for this VPC
     Type: String
@@ -86,20 +95,20 @@ Resources:
             - Effect: Allow
               Action:
                 - 's3:Get*'
-              Resource: 'arn:aws:s3:::source-bucket-dyslexicat/*'
+              Resource: !Sub 'arn:aws:s3:::${SourceBucketName}-${EnvironmentName}/*'
             - Effect: Allow
               Action:
                 - 's3:ListBucket'
-              Resource: 'arn:aws:s3:::source-bucket-dyslexicat'
+              Resource: !Sub 'arn:aws:s3:::${SourceBucketName}-${EnvironmentName}'
             - Effect: Allow
               Action:
                 - 's3:PutObject'
                 - 's3:Get*'
-              Resource: 'arn:aws:s3:::target-bucket-dyslexicat/*'
+              Resource: !Sub 'arn:aws:s3:::${TargetBucketName}-${EnvironmentName}/*'
             - Effect: Allow
               Action:
                 - 's3:ListBucket'
-              Resource: 'arn:aws:s3:::target-bucket-dyslexicat'
+              Resource: !Sub 'arn:aws:s3:::${TargetBucketName}-${EnvironmentName}'
       Architectures:
         - x86_64
       Events:
@@ -113,11 +122,11 @@ Resources:
   SourceBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: "source-bucket-dyslexicat"
+      BucketName: !Sub '${SourceBucketName}-${EnvironmentName}'
 
   # Target S3 Bucket
   TargetBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: "target-bucket-dyslexicat"
+      BucketName: !Sub '${TargetBucketName}-${EnvironmentName}'
 
