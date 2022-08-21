@@ -1,42 +1,55 @@
-import json
+from typing import List
+from dataclasses import dataclass
+from datetime import datetime
+import boto3
 
-# import requests
+WORD_CHECK = ["captain tsubasa", "star wars"]
+
+
+@dataclass
+class S3File:
+    name: str
+    timestamp: float
+    size_mb: float
+    str_found: bool
+
+
+# set clients for aws resources
+s3_client = boto3.resource("s3")
+dynamodb_client = boto3.resource("dynamodb")
+
+
+def contains_str(list_of_words: List[str], obj_name: str) -> bool:
+    for word in list_of_words:
+        if word in obj_name:
+            return True
+
+    return False
 
 
 def lambda_handler(event, context):
-    """Sample pure Lambda function
+    try:
+        s3_event = event["Records"][0]["s3"]
+        s3_obj = s3_event["object"]
 
-    Parameters
-    ----------
-    event: dict, required
-        API Gateway Lambda Proxy Input Format
+        copy_source = {"Bucket": s3_event["bucket"]["name"], "Key": s3_obj["key"]}
 
-        Event doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-input-format
+        bucket = s3_client.Bucket("target-bucket-dyslexicat")
 
-    context: object, required
-        Lambda Context runtime methods and attributes
+        obj_name = s3_obj["key"]
+        size = s3_obj["size"]
+        print(obj_name)
 
-        Context doc: https://docs.aws.amazon.com/lambda/latest/dg/python-context-object.html
+        bucket.copy(copy_source, obj_name)
 
-    Returns
-    ------
-    API Gateway Lambda Proxy Output Format: dict
+        file = S3File(
+            name=obj_name,
+            timestamp=datetime.now().timestamp(),
+            size_mb=size,
+            str_found=contains_str(list_of_words=WORD_CHECK, obj_name=obj_name),
+        )
 
-        Return doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
-    """
-
-    # try:
-    #     ip = requests.get("http://checkip.amazonaws.com/")
-    # except requests.RequestException as e:
-    #     # Send some context about this error to Lambda Logs
-    #     print(e)
-
-    #     raise e
-
-    return {
-        "statusCode": 200,
-        "body": json.dumps({
-            "message": "hello world",
-            # "location": ip.text.replace("\n", "")
-        }),
-    }
+        print(file)
+    except Exception as err:
+        print(err)
+        raise err
