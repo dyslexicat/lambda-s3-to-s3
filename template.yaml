@@ -130,3 +130,12 @@ Resources:
     Properties:
       BucketName: !Sub '${TargetBucketName}-${EnvironmentName}'
 
+  # Since our Lambda function is inside a VPC we need an Endpoint to access S3
+  S3GatewayEndpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      RouteTableIds:
+        - !Ref PrivateRouteTable
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
+      VpcId: !Ref VPC
+
