@@ -4,14 +4,17 @@ from datetime import datetime
 from decimal import Decimal
 from urllib.parse import unquote_plus
 import uuid
+import logging
 import boto3
 import os
 
 WORD_CHECK = ["captain tsubasa", "star wars"]
 TARGET_BUCKET_NAME = os.getenv("TARGET_BUCKET_NAME")
 TABLE_NAME = os.getenv("TABLE_NAME")
+LOG_LEVEL = logging.DEBUG if os.getenv("DEBUG", False) else logging.INFO
 
-# add logging / rename variables / use environment variables for TARGET_BUCKET_NAME and TABLE_NAME
+logger = logging.getLogger()
+logger.setLevel(LOG_LEVEL)
 
 
 @dataclass
@@ -52,8 +55,7 @@ def lambda_handler(event, context):
 
         size = conv_byte_to_mb(s3_obj["size"])
 
-        print(s3_obj)
-        print(obj_name)
+        logger.info(f"Copying {obj_name} to the {TARGET_BUCKET_NAME} bucket")
 
         bucket.copy(copy_source, obj_name)
 
@@ -68,7 +70,8 @@ def lambda_handler(event, context):
             str_found=contains_str(list_of_words=WORD_CHECK, obj_name=obj_name),
         )
 
-        print(file)
+        logger.info(f"Writing {file} to the {TABLE_NAME} DynamoDB table")
+
         table.put_item(
             Item={
                 "id": file.id,
@@ -80,5 +83,5 @@ def lambda_handler(event, context):
         )
 
     except Exception as err:
-        print(err)
+        logger.error(err)
         raise err
