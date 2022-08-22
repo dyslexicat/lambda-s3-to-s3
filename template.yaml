@@ -117,16 +117,6 @@ Resources:
             - Effect: Allow
               Sid: AccessDynamoTable
               Action:
-                - dynamodb:BatchGet*
-                - dynamodb:DescribeStream
-                - dynamodb:DescribeTable
-                - dynamodb:Get*
-                - dynamodb:Query
-                - dynamodb:Scan
-                - dynamodb:BatchWrite*
-                - dynamodb:CreateTable
-                - dynamodb:Delete*
-                - dynamodb:Update*
                 - dynamodb:PutItem
               Resource: !Sub "arn:aws:dynamodb:*:*:table/${DynamoDBTableName}"
       Environment:
