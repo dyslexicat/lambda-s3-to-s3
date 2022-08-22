@@ -8,15 +8,19 @@ import logging
 import boto3
 import os
 
-WORD_CHECK = ["captain tsubasa", "star wars"]
+# an array of phrases that will be used to check whether the name contains them or not
+PHRASE_CHECKLIST = ["captain tsubasa", "star wars"]
+# the name of the target bucket that s3 objects will be copied to
 TARGET_BUCKET_NAME = os.getenv("TARGET_BUCKET_NAME")
+# the name of the dynamodb table
 TABLE_NAME = os.getenv("TABLE_NAME")
+# log level that will be used throughout
 LOG_LEVEL = logging.DEBUG if os.getenv("DEBUG", False) else logging.INFO
 
 logger = logging.getLogger()
 logger.setLevel(LOG_LEVEL)
 
-
+# S3File class contains the metadata information about the object uploaded to S3
 @dataclass
 class S3File:
     id: str
@@ -25,7 +29,19 @@ class S3File:
     size_mb: Decimal
     str_found: bool
 
+    def write_metadata(self, table):
+        table.put_item(
+            Item={
+                "id": self.id,
+                "name": self.name,
+                "timestamp": self.timestamp,
+                "size_mb": self.size_mb,
+                "found": self.str_found,
+            }
+        )
 
+
+# conversion between bytes to megabytes since uploaded objects have their size as bytes
 def conv_byte_to_mb(size: int) -> Decimal:
     return round(Decimal(size * (1 / 100000)), 6)
 
@@ -35,8 +51,9 @@ s3_client = boto3.resource("s3")
 dynamodb_client = boto3.resource("dynamodb")
 
 
-def contains_str(list_of_words: List[str], obj_name: str) -> bool:
-    for word in list_of_words:
+# function that checks whether the object name includes one of the phrases in our checklist
+def contains_str(list_of_phrases: List[str], obj_name: str) -> bool:
+    for word in list_of_phrases:
         if word in obj_name:
             return True
 
@@ -47,6 +64,7 @@ def lambda_handler(event, context):
     try:
         s3_event = event["Records"][0]["s3"]
         s3_obj = s3_event["object"]
+        # unquote the object name since aws encodes spaces in filenames as +
         obj_name = unquote_plus(s3_obj["key"])
 
         copy_source = {"Bucket": s3_event["bucket"]["name"], "Key": obj_name}
@@ -67,20 +85,11 @@ def lambda_handler(event, context):
             # dynamodb does not support float
             timestamp=int(datetime.now().timestamp()),
             size_mb=size,
-            str_found=contains_str(list_of_words=WORD_CHECK, obj_name=obj_name),
+            str_found=contains_str(list_of_phrases=PHRASE_CHECKLIST, obj_name=obj_name),
         )
 
         logger.info(f"Writing {file} to the {TABLE_NAME} DynamoDB table")
-
-        table.put_item(
-            Item={
-                "id": file.id,
-                "name": file.name,
-                "timestamp": file.timestamp,
-                "size_mb": file.size_mb,
-                "found": file.str_found,
-            }
-        )
+        file.write_metadata(table)
 
     except Exception as err:
         logger.error(err)
