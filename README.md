@@ -65,6 +65,8 @@ A basic pipeline has been created for this project using the `sam pipeline init 
 
 The template provided by AWS included two stages one for a **dev** environment and one for **production** however since this repository is a sample, pipeline code related to the production environment has been commented out.
 
+**CAUTION**: using `sam pipelines` creates a secret in Secrets Manager which is not included in Free tier. As a challenge, you can investigate the generated IAM roles and create a user with the necessary privileges without using this command.
+
 
 ## Fetch, tail, and filter Lambda function logs
 
