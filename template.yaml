@@ -3,7 +3,7 @@ Transform: AWS::Serverless-2016-10-31
 Description: >
   aws-s3-to-s3
 
-  Sample SAM Template for aws-s3-to-s3
+  SAM Template for aws-s3-to-s3
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
